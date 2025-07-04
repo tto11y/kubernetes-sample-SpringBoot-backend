@@ -1,4 +1,4 @@
-package com.teatown.software.kubernetes.demo1.application.security;
+package com.teatown.software.kubernetes.demo.application.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

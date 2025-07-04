@@ -1,5 +1,5 @@
 spring:
-  application.name: demo1
+  application.name: demo
   cloud:
     config:
       enabled: false
