@@ -3,6 +3,7 @@ package com.teatown.software.kubernetes.demo.application.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,6 +15,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Collections;
 import java.util.List;
@@ -57,17 +61,41 @@ public class SecurityConfig {
         return username -> new User("testuser", "", List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
 
+    // to avoid cross-origin source resource sharing errors,
+    // it is necessary to add CORS mappings
+    // so that the HTTP response headers Access-Control-Allow-* are added by the Spring Boot backend
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/api/hello-world/greetings").allowedOrigins("http://localhost:4200");
+            }
+        };
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        final var restTemplate = new RestTemplate();
+        restTemplate.setMessageConverters(Collections.singletonList(new MappingJackson2HttpMessageConverter()));
+        return restTemplate;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http.authorizeRequests(authorizeRequests -> authorizeRequests
-                                .requestMatchers(HttpMethod.GET, "/isAlive" ).permitAll()
-                                // to become authorized, a principal (e.g. user, device, system)
-                                // must have the authority ROLE_USER assigned
-                                .requestMatchers(HttpMethod.GET, "/api/hello-world/greetings").hasAuthority("ROLE_USER")
-                                // the matcher below ensures that any new API that is not matched by the request matchers above
-                                // will be secured by default
-                                .anyRequest().authenticated()
+        http.authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                        .requestMatchers(HttpMethod.GET, "/isAlive" ).permitAll()
+                        // to avoid cross-origin source resource sharing errors,
+                        // it is necessary to allow the browser's preflight HTTP OPTIONS request,
+                        // so that the HTTP response headers Access-Control-Allow-* are added by the Spring Boot backend
+                        .requestMatchers(HttpMethod.OPTIONS, "/api/hello-world/greetings").permitAll()
+                        // to become authorized, a principal (e.g. user, device, system)
+                        // must have the authority ROLE_USER assigned
+                        .requestMatchers(HttpMethod.GET, "/api/hello-world/greetings").hasAuthority("ROLE_USER")
+                        // the matcher below ensures that any new API that is not matched by the request matchers above
+                        // will be secured by default
+                        .anyRequest().authenticated()
                 )
                 // see https://docs.spring.io/spring-security/site/docs/3.2.x/reference/htmlsingle/html5/#csrf
                 .csrf(AbstractHttpConfigurer::disable)
