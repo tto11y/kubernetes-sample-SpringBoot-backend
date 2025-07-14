@@ -89,6 +89,9 @@ public class SecurityConfig {
                         // to avoid cross-origin source resource sharing errors,
                         // it is necessary to allow the browser's preflight HTTP OPTIONS request,
                         // so that the HTTP response headers Access-Control-Allow-* are added by the Spring Boot backend
+                        //
+                        // another way to combat this is to add HTTP headers via browser plugin to every HTTP request.
+                        // in this case, there's no need to permit the HTTP OPTIONS preflight w/o authentication
                         .requestMatchers(HttpMethod.OPTIONS, "/api/hello-world/greetings").permitAll()
                         // to become authorized, a principal (e.g. user, device, system)
                         // must have the authority ROLE_USER assigned
