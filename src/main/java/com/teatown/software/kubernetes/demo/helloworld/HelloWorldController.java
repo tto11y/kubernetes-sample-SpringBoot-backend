@@ -13,10 +13,6 @@ public class HelloWorldController {
     @GetMapping(path = "greetings", produces = "application/json")
     public ResponseEntity<GreetingDto> greetings(@RequestParam(required = false) final String name, @AuthenticationPrincipal final User user) {
 
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
         if (name == null || name.isEmpty()) {
             return ResponseEntity.ok(GreetingDto.builder().text("Hello World!").build());
         }
