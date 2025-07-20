@@ -30,6 +30,9 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    // For authenticating incoming client requests, this application uses the RequestHeaderAuthenticationFilter.
+    // In other words, the application (Spring Security to be more precise) checks if each incoming HTTP request
+    // contains an HTTP header called "user".
     @Bean
     public RequestHeaderAuthenticationFilter authenticationFilter() {
         final var filter = new RequestHeaderAuthenticationFilter();
@@ -63,6 +66,10 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         return new UserDetailsService() {
+
+            // When an HTTP request traverses from the outer borders to the Spring Security layer of the application,
+            // org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider eventually
+            // calls this dummy loadUserByUsername() implementation when authenticating a user
             @Override
             public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
                 try {
